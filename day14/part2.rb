@@ -66,45 +66,43 @@ def roll_west(rock_map)
 end
 
 stable = false
-saved_states = []
+previous_results = []
 cycles = 0
-while cycles < 10 || stable.nil?
-  # puts "Comparing:"
-  # rock_map.each { |row| puts row }
-  # puts "To saved:"
-  # saved_state&.each { |row| puts row }
-  stable = saved_states.index(rock_map)
-  saved_states << rock_map.dup.map(&:dup)
-
-  # rock_map.each { |row| puts row }
-  # puts
-
+while !stable
   roll_north(rock_map)
-
-
-  # rock_map.each { |row| puts row }
-  # puts
 
   roll_west(rock_map)
 
-
-  # rock_map.each { |row| puts row }
-  # puts
-
   roll_south(rock_map)
-
-  # rock_map.each { |row| puts row }
-  # puts
 
   roll_east(rock_map)
 
-  # rock_map.each { |row| puts row }
-  # puts
-
   cycles += 1
+
+  load = rock_map.reverse.map.with_index { |row, i| row.count('O') * (i+1) }.sum
+
+  puts "Load after #{cycles} cycles = #{load}"
+
+  previous_results << load
+
+  next if cycles < 10
+  # Try and find a looping sequence
+  (2..(previous_results.length/2)).each do |n|
+    # Do we have a repeating pattern of n values?
+    if previous_results[-n..-1] == previous_results[-(2*n)..-(n+1)]
+      puts "Found repeating pattern of #{n} values"
+      sequence = previous_results[-n..-1]
+      puts ((cycles - n + 1)..cycles).to_a.to_s
+      puts sequence.to_s
+
+      # Extrapolate sequence to value at 1000000000
+      sequence_index = 1_000_000_000 % n - (cycles - n) % n - 1
+      puts "Result = #{sequence[sequence_index]} (#{sequence_index})"
+
+      stable = true
+      break
+    end
+  end
+
   break if cycles > 10000
 end
-puts stable
-puts cycles
-result = rock_map.reverse.map.with_index { |row, i| row.count('O') * (i+1) }.sum
-puts result
